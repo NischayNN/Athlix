@@ -9,6 +9,7 @@ from fastapi.responses import JSONResponse
 from app.models.schemas import HealthResponse
 from app.routes.fatigue_route  import router as fatigue_router
 from app.routes.risk_route     import router as risk_router
+from app.routes.process_route  import router as process_router
 
 logging.basicConfig(
     level=logging.INFO,
@@ -40,6 +41,7 @@ def create_app() -> FastAPI:
 
     app.include_router(fatigue_router)
     app.include_router(risk_router)
+    app.include_router(process_router)
 
     @app.on_event("startup")
     async def on_startup() -> None:

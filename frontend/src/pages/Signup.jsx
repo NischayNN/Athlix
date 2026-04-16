@@ -1,17 +1,20 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-function Login() {
+function Signup() {
   const navigate = useNavigate();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleLogin = (e) => {
+  const handleSignup = (e) => {
     e.preventDefault();
-    // Simulate login success - bypass backend for MVP
-    // We check if it matches stored or just navigate for simplicity
-    navigate('/dashboard');
+    
+    // Store user id (email) and password in localStorage
+    localStorage.setItem('athlix_user_email', email);
+    localStorage.setItem('athlix_user_password', password);
+    
+    // Simulate signup success and navigate to login or dashboard
+    navigate('/login');
   };
 
   return (
@@ -28,16 +31,16 @@ function Login() {
         <span className="font-bold text-xl tracking-tight uppercase">Athlix</span>
       </div>
 
-      {/* Main Login Module */}
+      {/* Main Signup Module */}
       <div className="w-full max-w-sm px-6">
         <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tighter mb-4 text-center">
-          Terminal
+          Register
         </h1>
         <p className="text-zinc-500 font-light text-center mb-16 tracking-wide text-sm">
-          Access your biomechanical profile and movement tracking workspace.
+          Initialize your biomechanical profile and movement tracking workspace.
         </p>
 
-        <form onSubmit={handleLogin} className="space-y-10">
+        <form onSubmit={handleSignup} className="space-y-10">
           <div>
             <label className="block text-[10px] font-bold tracking-[0.2em] uppercase text-zinc-500 mb-2">
               Email Address
@@ -70,17 +73,16 @@ function Login() {
             type="submit"
             className="w-full pt-6 pb-6 bg-white text-black text-[10px] font-bold tracking-[0.2em] uppercase hover:bg-zinc-200 transition shadow-2xl mt-4"
           >
-            Authenticate
+            Create Profile
           </button>
         </form>
 
         <div className="mt-8 text-center">
             <button 
-              type="button"
-              onClick={() => navigate('/signup')}
+              onClick={() => navigate('/login')}
               className="text-[10px] text-zinc-500 font-bold uppercase tracking-[0.1em] hover:text-white transition-colors"
             >
-                Need an account? Register Profile
+                Already have an account? Login
             </button>
         </div>
 
@@ -95,4 +97,4 @@ function Login() {
   );
 }
 
-export default Login;
+export default Signup;
