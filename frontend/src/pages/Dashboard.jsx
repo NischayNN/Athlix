@@ -28,8 +28,11 @@ function Dashboard() {
                 <li className="text-zinc-600 hover:text-zinc-400 cursor-not-allowed transition flex items-center gap-3">
                   <span className="w-1.5 h-1.5 rounded-full bg-transparent"></span> History
                 </li>
-                <li className="text-zinc-600 hover:text-zinc-400 cursor-not-allowed transition flex items-center gap-3">
-                  <span className="w-1.5 h-1.5 rounded-full bg-transparent"></span> Athletes
+                <li 
+                  onClick={() => navigate('/profile')}
+                  className="text-white hover:text-zinc-300 cursor-pointer transition flex items-center gap-3"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-zinc-600"></span> Athlete Profile
                 </li>
               </ul>
             </div>

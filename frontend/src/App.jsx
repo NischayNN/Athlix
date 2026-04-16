@@ -7,6 +7,7 @@ import Analysis from "./pages/Analysis";
 import Results from "./pages/Results";
 import Navbar from "./components/Navbar";
 import Signup from "./pages/Signup";
+import Profile from "./pages/Profile";
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/profile" element={<Profile />} />
         <Route path="/upload" element={<Upload />} />
         <Route path="/analysis" element={<Analysis />} />
         <Route path="/results" element={<Results />} />

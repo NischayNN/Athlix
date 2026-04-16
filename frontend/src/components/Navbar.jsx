@@ -37,6 +37,7 @@ function Navbar() {
           ) : (
             <>
               {/* Product navigation — only visible after login flow */}
+              <Link to="/profile" className="hover:text-zinc-400 transition-colors hidden sm:block">Profile</Link>
               <Link to="/dashboard" className="hover:text-zinc-400 transition-colors hidden sm:block">Dashboard</Link>
               <Link to="/upload" className="border border-zinc-800 hover:border-white px-5 py-2 hover:bg-white hover:text-black transition-all">
                 New Analysis
