@@ -10,7 +10,7 @@ import numpy as np
 
 from app.models.schemas import AngleResult, FormFlags, Landmark, PoseLandmarkItem, PoseDetectionResponse
 from app.services.feature_engineering import analyze_form
-from app.utils.angle_utils import compute_all_angles
+from app.utils.angle_utils import calculate_angle, compute_all_angles
 
 logger = logging.getLogger(__name__)
 
@@ -194,3 +194,101 @@ def _mock_landmark_items(pose_landmarks) -> List[PoseLandmarkItem]:
             )
         )
     return items
+
+
+# ---------------------------------------------------------------------------
+# Video-level form analysis
+# ---------------------------------------------------------------------------
+
+def analyze_video_form(video_path: str) -> float:
+    """
+    Process every frame of *video_path* and return a form_decay score (0–100).
+
+    Algorithm
+    ---------
+    1. Extract knee-flexion angle (hip → knee → ankle) from each frame.
+    2. Compute the standard deviation of those angles across all frames.
+       - Stable angles  → good form  → low std dev → low score
+       - Wobbly angles  → bad form   → high std dev → high score
+    3. Add a per-frame penalty for dangerously extreme knee angles.
+    4. Amplify the combined score by 1.5× to widen the gap between good and bad.
+    5. Clamp to [0, 100].
+
+    Target ranges
+    -------------
+    Good form  →  ~20–35
+    Bad form   →  ~60–90
+    """
+    import statistics
+
+    angles: List[float] = []
+    cap = cv2.VideoCapture(video_path)
+
+    if not cap.isOpened():
+        logger.warning("analyze_video_form: could not open '%s'; defaulting to 50", video_path)
+        print("[DEBUG] Video could not be opened — using default form_decay=50")
+        return 50.0
+
+    with PoseService() as svc:
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                break
+
+            rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            landmarks = svc.process_frame(rgb)
+            if not landmarks:
+                continue
+
+            # Build a name → landmark lookup for this frame
+            lm_map = {lm.name: lm for lm in landmarks}
+
+            hip   = lm_map.get("LEFT_HIP")
+            knee  = lm_map.get("LEFT_KNEE")
+            ankle = lm_map.get("LEFT_ANKLE")
+
+            if not (hip and knee and ankle):
+                continue
+            if any(lm.visibility < 0.4 for lm in (hip, knee, ankle)):
+                continue
+
+            # Knee flexion angle: the angle at the knee vertex
+            angle = calculate_angle(
+                (hip.x,   hip.y,   hip.z),
+                (knee.x,  knee.y,  knee.z),
+                (ankle.x, ankle.y, ankle.z),
+            )
+            angles.append(angle)
+
+    cap.release()
+
+    if len(angles) < 2:
+        logger.warning("analyze_video_form: only %d valid frames; defaulting to 50", len(angles))
+        print(f"[DEBUG] Not enough frames detected ({len(angles)}), using default form_decay=50")
+        return 50.0
+
+    # --- Step 1: instability score from angle standard deviation ---
+    angle_std = statistics.stdev(angles)
+    # std ~5°  (very stable)   → base ~10
+    # std ~30° (very unstable) → base ~60
+    base_score = angle_std * 2.0
+
+    # --- Step 2: penalty for extreme knee angles ---
+    total_penalty = 0.0
+    for a in angles:
+        if a < 60:
+            total_penalty += 20.0   # dangerously deep / collapsed
+        elif a < 90:
+            total_penalty += 10.0   # insufficient depth control
+    avg_penalty = total_penalty / len(angles)
+
+    # --- Step 3: amplify to widen good-vs-bad separation ---
+    form_decay = (base_score + avg_penalty) * 1.5
+    form_decay = float(min(max(form_decay, 0.0), 100.0))
+
+    print(f"[DEBUG] Frames analysed : {len(angles)}")
+    print(f"[DEBUG] Angle std dev   : {angle_std:.2f}\u00b0")
+    print(f"[DEBUG] Avg penalty     : {avg_penalty:.2f}")
+    print(f"[DEBUG] Form decay      : {form_decay:.2f} / 100")
+
+    return form_decay

@@ -22,13 +22,13 @@ logger = logging.getLogger(__name__)
 LEVEL_LOW_MAX    = 30
 LEVEL_MEDIUM_MAX = 70
 
-FATIGUE_HIGH_THRESHOLD  = 7.0
-FORM_DECAY_HIGH_THRESHOLD = 0.70
-RECOVERY_LOW_THRESHOLD  = 35.0
+FATIGUE_HIGH_THRESHOLD    = 7.0
+FORM_DECAY_HIGH_THRESHOLD = 0.50   # lowered: triggers on moderately bad form
+RECOVERY_LOW_THRESHOLD    = 35.0
 
-FUSION_FATIGUE_FORM_BOOST  = 8.0
-FUSION_RECOVERY_BOOST      = 5.0
-FUSION_TRIPLE_THREAT_BONUS = 4.0
+FUSION_FATIGUE_FORM_BOOST  = 15.0  # raised: bad form + fatigue is high risk
+FUSION_RECOVERY_BOOST      = 8.0   # raised: poor recovery amplifies risk
+FUSION_TRIPLE_THREAT_BONUS = 6.0   # raised: all three bad → serious penalty
 
 
 @dataclass
@@ -165,10 +165,44 @@ def get_risk_score(
 
     X = scaler.transform(eng_df[feat_cols])
 
-    model        = _load_model(model_name)
-    model_score  = float(np.clip(model.predict(X)[0], 0.0, 100.0))
+    model       = _load_model(model_name)
+    model_score = float(np.clip(model.predict(X)[0], 0.0, 100.0))
 
-    final_score, delta, flags = _apply_fusion(model_score, features)
+    # ------------------------------------------------------------------
+    # Direct weighted formula — form_decay gets 50% of the weight so
+    # that real video quality strongly drives the final risk score.
+    #
+    # Scaling inputs to a 0-100 space:
+    #   form_decay   : already 0-1  → × 100
+    #   fatigue_index: 0-10         → × 10
+    #   training_load: 1-10         → × 10
+    #   recovery_score: 0-100       → already in range
+    # ------------------------------------------------------------------
+    fd = features["form_decay"]    * 100.0   # 0-100
+    fi = features["fatigue_index"] * 10.0    # 0-100
+    ld = features["training_load"] * 10.0    # 0-100
+    rs = features["recovery_score"]           # 0-100
+
+    direct_score = (
+        0.50 * fd +
+        0.25 * fi +
+        0.15 * ld +
+        0.10 * (100.0 - rs)
+    )
+    direct_score = float(np.clip(direct_score, 0.0, 100.0))
+
+    # Blend: 35% ML model (generalisation) + 65% direct formula (form sensitivity)
+    blended_score = float(np.clip(0.35 * model_score + 0.65 * direct_score, 0.0, 100.0))
+
+    print(f"[DEBUG] form_decay      : {features['form_decay']:.4f}  ({fd:.1f}/100)")
+    print(f"[DEBUG] direct_score    : {direct_score:.2f}")
+    print(f"[DEBUG] model_score     : {model_score:.2f}")
+    print(f"[DEBUG] blended_score   : {blended_score:.2f}")
+
+    final_score, delta, flags = _apply_fusion(blended_score, features)
+
+    print(f"[DEBUG] final risk      : {final_score:.2f}")
+
     level = _classify_level(final_score)
 
     return RiskOutput(
