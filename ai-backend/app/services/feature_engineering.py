@@ -5,11 +5,14 @@ from typing import Dict, List, Optional, Tuple
 
 from app.models.schemas import (
     BiomechanicalFeatures,
+    FatigueInput,
+    FatigueResult,
     FormFlags,
     FormThresholds,
     JointAngles,
     Landmark,
     PoseLandmarkItem,
+    SetSnapshot,
 )
 from app.utils.angle_utils import calculate_angle
 
@@ -177,35 +180,5 @@ def build_feature_vector(frame_index: int, landmarks: List[Landmark]) -> Biomech
 
 
 def predict_risk(features: BiomechanicalFeatures) -> float:
-    """
-    Derive an injury risk score from a BiomechanicalFeatures object.
-
-    Delegates to risk_engine.get_risk_score() which loads the trained XGBoost
-    model and applies rule-based fusion on top of the raw prediction.
-
-    Parameters
-    ----------
-    features : BiomechanicalFeatures
-
-    Returns
-    -------
-    float
-        Final risk score in [0, 100] after fusion adjustments.
-    """
-    from app.services.risk_engine import get_risk_score  # lazy import avoids circular deps
-
-    # Map the available biomechanical features onto the risk engine's input contract.
-    # Fields not captured by the pose pipeline (training_load, fatigue_index, etc.)
-    # fall back to the risk_engine defaults until the full athlete session context
-    # is passed through the route layer.
-    input_features = {
-        "form_decay":      features.form_deviation_score or 0.0,
-        "previous_injury": 0,  # placeholder — inject from athlete profile when available
-    }
-
-    result = get_risk_score(input_features)
-    logger.info(
-        "predict_risk -> score=%.1f level=%s delta=%.1f",
-        result.risk_score, result.risk_level, result.fusion_delta,
-    )
-    return result.risk_score
+    # TODO: joblib.load("model/model.pkl") → model.predict(feature_vector)
+    return 0.0

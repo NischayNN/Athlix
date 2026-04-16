@@ -7,8 +7,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.models.schemas import HealthResponse
-from app.routes.upload_route import router as upload_router
-from app.routes.pose_route   import router as pose_router
+from app.routes.upload_route  import router as upload_router
+from app.routes.pose_route    import router as pose_router
+from app.routes.fatigue_route import router as fatigue_router
 
 logging.basicConfig(
     level=logging.INFO,
@@ -40,6 +41,7 @@ def create_app() -> FastAPI:
 
     app.include_router(pose_router)
     app.include_router(upload_router)
+    app.include_router(fatigue_router)
 
     @app.on_event("startup")
     async def on_startup() -> None:

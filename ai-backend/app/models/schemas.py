@@ -159,6 +159,27 @@ class FrameProcessingResponse(BaseModel):
     metadata: Dict[str, str] = Field(default_factory=dict)
 
 
+class SetSnapshot(BaseModel):
+    """Snapshot of angle data from a previously completed set."""
+    set_index:  int
+    timestamp:  Optional[float] = None
+    knee_angle: Optional[float] = None
+    hip_angle:  Optional[float] = None
+    back_angle: Optional[float] = None
+
+
+class FatigueInput(BaseModel):
+    training_load:     float = Field(..., gt=0, description="Training load metric (e.g. volume-load in kg·reps).")
+    sleep_hours:       float = Field(..., gt=0, le=24, description="Hours of sleep in the last night.")
+    previous_sets_data: Optional[list[SetSnapshot]] = Field(None, description="Ordered history of per-set angle snapshots.")
+
+
+class FatigueResult(BaseModel):
+    fatigue_score:   float = Field(..., description="Higher = more fatigued. load / sleep_hours.")
+    recovery_score:  float = Field(..., description="Higher = better recovered. sleep_hours / load (normalised).")
+    form_decay_rate: Optional[float] = Field(None, description="Mean per-set degradation in back angle (degrees/set). None when < 2 sets provided.")
+
+
 class HealthResponse(BaseModel):
     status:          str  = "ok"
     version:         str
