@@ -4,13 +4,8 @@ export const analyzeVideo = async (file, context = {}) => {
   const formData = new FormData();
   formData.append('file', file);
 
-  // Start with nulls — we will fill from real backend data
-  let computedScore     = null;
-  let computedRisk      = null;
-  let computedRiskLevel = null;
-  let computedReps      = null;
-  let backendFormFlags  = null;
-  let backendFeatureVec = null;
+  // All fields start null — filled from real backend data
+  let backendData = null;
 
   try {
     const response = await fetch('http://127.0.0.1:8000/analyze', {
@@ -28,21 +23,8 @@ export const analyzeVideo = async (file, context = {}) => {
       throw new Error(data.detail || data.error);
     }
 
-    // Pull every computed field from the backend response
-    if (data.score       !== undefined) computedScore     = data.score;
-    if (data.injury_risk !== undefined) computedRisk      = data.injury_risk;
-    if (data.risk_level  !== undefined) computedRiskLevel = data.risk_level;
-    if (data.reps        !== undefined) computedReps      = data.reps;
-    if (data.form_flags)                backendFormFlags  = data.form_flags;
-    if (data.feature_vector)            backendFeatureVec = data.feature_vector;
-
-    console.log('[Athlix] Backend response:', {
-      score: computedScore,
-      injury_risk: computedRisk,
-      risk_level: computedRiskLevel,
-      reps: computedReps,
-      feature_vector: backendFeatureVec,
-    });
+    backendData = data;
+    console.log('[Athlix] Backend response:', backendData);
 
   } catch (error) {
     console.warn('[Athlix] Backend call failed, using mock data:', error.message);
@@ -50,83 +32,105 @@ export const analyzeVideo = async (file, context = {}) => {
 
   // ── Context-derived metadata ────────────────────────────────────────────
   const { profile, sessionContext } = context;
-  const intensity = parseFloat(sessionContext?.derivedIntensity) || 7.5;
-
-  let intensityBand = 'MODERATE';
-  if (intensity >= 9.0) intensityBand = 'MAXIMAL';
-  else if (intensity >= 8.0) intensityBand = 'HIGH';
-  else if (intensity <= 6.0) intensityBand = 'LOW';
-
-  let interpretationText = `Technique maintained relatively stable under ${intensityBand.toLowerCase()} relative load context.`;
-  if (intensityBand === 'HIGH' || intensityBand === 'MAXIMAL') {
-    interpretationText = `Form breakdown occurred under ${intensityBand.toLowerCase()} relative load. Central nervous system fatigue is directly exacerbating mechanical deviations and accelerating failure.`;
-  } else if (intensityBand === 'LOW') {
-    interpretationText = `Significant technique issues appeared even under ${intensityBand.toLowerCase()} relative load. This clearly indicates a primary motor control deficit and mobility restriction rather than pure strength failure.`;
-  }
-
   const pr  = parseFloat(profile?.maxPR) || 140;
   const w   = parseFloat(sessionContext?.weightUsed) || 100;
-  const pct = ((w / pr) * 100).toFixed(0);
+  const pct = backendData?.relativePct || ((w / pr) * 100).toFixed(0);
 
-  // ── Determine final score. Backend value takes full priority. ─────────
-  // If backend returned a score, use it directly (it's already 0-100 quality score).
-  // Fall back to mockAnalysisData.score ONLY if backend completely failed.
-  const finalScore = computedScore !== null ? computedScore : (mockAnalysisData.score || 82);
+  // ── Use backend values when available, fall back to mock ───────────────
+  const finalScore          = backendData?.score                  ?? mockAnalysisData.score ?? 82;
+  const reps                = backendData?.reps                   ?? parseInt(sessionContext?.reps) ?? 6;
+  const injuryRisk          = backendData?.injury_risk            ?? 50;
+  const riskLevel           = backendData?.risk_level             ?? 'moderate';
+  const movementRiskIndex   = backendData?.movementRiskIndex      ?? null;
+  const riskLabel           = backendData?.riskLabel              ?? 'Moderate';
+  const riskBreakdown       = backendData?.riskBreakdown          ?? [];
+  const explanationInsight  = backendData?.explanationInsight     ?? 'Awaiting analysis data.';
+  const movementVelocity    = backendData?.movementVelocity       ?? '0.65';
+  const velocityClassification = backendData?.velocityClassification ?? 'Hypertrophy';
+  const loadScore           = backendData?.loadScore              ?? '0.0';
+  const formFlags           = backendData?.form_flags             ?? {};
+  const featureVector       = backendData?.feature_vector         ?? {};
 
-  // injuryRisk label derived from backend injury_risk (numeric, 0-100)
-  let injuryRiskLabel;
-  if (computedRisk !== null) {
-    injuryRiskLabel = computedRisk > 60 ? 'ELEVATED' : computedRisk > 35 ? 'MODERATE' : 'LOW';
-  } else {
-    injuryRiskLabel = finalScore < 75 ? 'ELEVATED' : finalScore < 85 ? 'MODERATE' : 'LOW';
-  }
+  // Key issues: prefer backend, fall back to mock
+  const keyIssues = backendData?.keyIssues ?? mockAnalysisData.keyIssues ?? [];
 
-  // ── Build decayData dynamically from reps if available ─────────────────
-  // Simulate rep-by-rep decay based on computed score and rep count
-  const repCount = computedReps !== null ? computedReps : 6;
-  const decayData = Array.from({ length: Math.max(repCount, 1) }, (_, i) => ({
-    rep: i + 1,
-    // Realistic decay: starts near full score, drops linearly toward finalScore
-    score: Math.round(Math.min(100, finalScore + (100 - finalScore) * (1 - i / Math.max(repCount - 1, 1)))),
-  }));
+  // Injury risk label
+  const injuryRiskLabel = injuryRisk > 60 ? 'ELEVATED' : injuryRisk > 35 ? 'MODERATE' : 'LOW';
 
-  // ── Merge real data over the mock skeleton ───────────────────────────────
-  const finalResult = {
-    ...mockAnalysisData,
-    score:            finalScore,
-    injuryRisk:       injuryRiskLabel,
-    reps:             repCount,
-    decayData,
-    weightUsed:       w,
-    maxPR:            pr,
-    relativePct:      pct,
-    derivedIntensity: intensity.toFixed(1),
-    intensityBand,
-    loadInterpretation: interpretationText,
-    // Real form flags from backend override mock keyIssues visibility
-    ...(backendFormFlags && {
-      form_flags: backendFormFlags,
-      keyIssues: [
-        backendFormFlags.knee_valgus       && { id: 1, issue: 'Knee Valgus',           severity: 'Medium', detail: 'Medial collapse detected during the concentric phase.' },
-        backendFormFlags.incomplete_depth  && { id: 2, issue: 'Incomplete Depth',       severity: 'High',   detail: 'Hip crease did not drop below the patella.' },
-        backendFormFlags.excessive_forward_lean && { id: 3, issue: 'Excessive Forward Lean', severity: 'Medium', detail: 'Torso exceeded safe forward lean threshold.' },
-      ].filter(Boolean),
-    }),
-    ...(backendFeatureVec && { feature_vector: backendFeatureVec }),
+  // ── Build decayData dynamically from actual reps ──────────────────────
+  const decayData = Array.from({ length: Math.max(reps, 1) }, (_, i) => {
+    // Simulate progressive fatigue: starts high, drops accelerating
+    const startScore = Math.min(97, Math.round(finalScore + 12));
+    const fatigueDrop = (i * i * 1.2) + (Math.random() * 3);
+    return {
+      rep: i + 1,
+      score: Math.max(40, Math.round(startScore - fatigueDrop)),
+    };
+  });
+
+  // ── Coaching tips based on detected issues ────────────────────────────
+  const issueCoachingMap = {
+    'Incomplete Depth':       { action: 'Increase Squat Depth',    cue: 'Focus on breaking parallel. Use a box squat or pause at the bottom to build proprioceptive awareness.', target: 'Hip Mobility' },
+    'Knee Valgus':            { action: 'Active Glute Engagement', cue: "Drive knees outward during the concentric phase. Cue 'spread the floor' with your feet.",             target: 'Knee Tracking' },
+    'Excessive Forward Lean': { action: 'Maintain Vertical Torso', cue: 'Keep chest proud and eyes forward. Consider front-squatting to reinforce upright mechanics.',           target: 'Spinal Neutrality' },
+    'Heel Rise':              { action: 'Improve Ankle Mobility',  cue: 'Work on ankle dorsiflexion with wall stretches. Consider elevated-heel squat shoes.',                  target: 'Ankle ROM' },
+    'Lateral Shift':          { action: 'Unilateral Correction',   cue: 'Add single-leg exercises (Bulgarian split squats) to eliminate asymmetry.',                            target: 'Bilateral Symmetry' },
   };
 
-  // Tailor coaching tips by load intensity
-  if (intensityBand === 'MAXIMAL' || intensityBand === 'HIGH') {
-    finalResult.coachingTips = [
-      { id: 99, action: 'Manage Absolute Intensity', cue: 'Current relative load is too high to practice raw kinematics. Drop load by 15% to stabilize mechanics before adapting.', target: 'Recovery & Load' },
-      ...mockAnalysisData.coachingTips.slice(0, 2),
-    ];
-  } else if (intensityBand === 'LOW') {
-    finalResult.coachingTips = [
-      { id: 98, action: 'Prioritize Motor Control', cue: 'Mechanical flaws persist without heavy load. Focus strictly on pause-reps and unweighted mobility to rewrite motor patterns.', target: 'Technique' },
-      ...mockAnalysisData.coachingTips.slice(0, 2),
-    ];
+  let coachingTips = keyIssues
+    .map((issue, idx) => issueCoachingMap[issue.issue] ? { id: idx + 1, ...issueCoachingMap[issue.issue] } : null)
+    .filter(Boolean);
+
+  if (coachingTips.length < 2) {
+    coachingTips.push({
+      id: 50,
+      action: 'Control Deceleration',
+      cue: 'Implement a 3-second eccentric phase to build tendon resilience and improve positional awareness.',
+      target: 'Tendon Load',
+    });
   }
+
+  // ── Summary ───────────────────────────────────────────────────────────
+  const issueNames = keyIssues.map(i => i.issue?.toLowerCase()).filter(Boolean).join(', ') || 'no major issues';
+  const qualityDesc = finalScore >= 85 ? 'strong' : finalScore >= 70 ? 'acceptable but declining' : 'compromised';
+  const summary = `Movement quality is ${qualityDesc}. Key areas of concern: ${issueNames}. ${
+    finalScore < 75
+      ? 'Immediate load reduction recommended to prevent structural injury risk.'
+      : 'Continue monitoring with progressive overload caution.'
+  }`;
+
+  // ── Compile final result ──────────────────────────────────────────────
+  const finalResult = {
+    score: finalScore,
+    movement: 'Back Squat',
+    timestamp: new Date().toISOString(),
+    injuryRisk: injuryRiskLabel,
+    reps,
+    decayData,
+    keyIssues,
+    riskFactors: keyIssues.map((iss, i) => ({
+      id: i + 1,
+      title: iss.issue,
+      description: iss.detail,
+    })),
+    coachingTips: coachingTips.slice(0, 4),
+    summary,
+    // Movement Risk Index section
+    movementRiskIndex,
+    riskLabel,
+    riskBreakdown,
+    explanationInsight,
+    // Intensity Profile section
+    movementVelocity,
+    velocityClassification,
+    loadScore,
+    relativePct: pct,
+    weightUsed: w,
+    maxPR: pr,
+    // Raw data for debugging
+    feature_vector: featureVector,
+    form_flags: formFlags,
+  };
 
   localStorage.setItem('temp_analysis', JSON.stringify(finalResult));
 

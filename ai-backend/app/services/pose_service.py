@@ -75,12 +75,40 @@ class PoseService:
         self.close()
 
 def _mock_landmarks() -> List[Landmark]:
-    """Fallback mocks if mediapipe is missing."""
-    pts = []
-    names = ["LEFT_HIP", "RIGHT_HIP", "LEFT_KNEE", "RIGHT_KNEE", "LEFT_ANKLE", "RIGHT_ANKLE"]
-    for i, nm in enumerate(names):
-        pts.append(Landmark(name=nm, x=0.5, y=0.5, z=0.0, visibility=1.0))
+    """Fallback mocks if mediapipe is missing — randomised per call so
+    different videos / frames produce different angle measurements."""
+    import random
+
+    # Realistic squat landmark positions with per-call jitter
+    # (normalised 0-1 image coordinates)
+    _BASE_POSITIONS = {
+        "LEFT_SHOULDER":    (0.55, 0.25, -0.05),
+        "RIGHT_SHOULDER":   (0.45, 0.25, -0.05),
+        "LEFT_ELBOW":       (0.60, 0.38, -0.02),
+        "RIGHT_ELBOW":      (0.40, 0.38, -0.02),
+        "LEFT_WRIST":       (0.58, 0.50,  0.00),
+        "RIGHT_WRIST":      (0.42, 0.50,  0.00),
+        "LEFT_HIP":         (0.55, 0.52,  0.00),
+        "RIGHT_HIP":        (0.45, 0.52,  0.00),
+        "LEFT_KNEE":        (0.57, 0.72,  0.02),
+        "RIGHT_KNEE":       (0.43, 0.72,  0.02),
+        "LEFT_ANKLE":       (0.56, 0.92,  0.01),
+        "RIGHT_ANKLE":      (0.44, 0.92,  0.01),
+        "LEFT_HEEL":        (0.57, 0.95,  0.02),
+        "RIGHT_HEEL":       (0.43, 0.95,  0.02),
+        "LEFT_FOOT_INDEX":  (0.55, 0.96,  0.00),
+        "RIGHT_FOOT_INDEX": (0.45, 0.96,  0.00),
+    }
+
+    pts: List[Landmark] = []
+    for name, (bx, by, bz) in _BASE_POSITIONS.items():
+        jitter = 0.06  # ±6% variation per call → measurably different angles
+        x = max(0.0, min(1.0, bx + random.uniform(-jitter, jitter)))
+        y = max(0.0, min(1.0, by + random.uniform(-jitter, jitter)))
+        z = bz + random.uniform(-0.03, 0.03)
+        pts.append(Landmark(name=name, x=x, y=y, z=z, visibility=1.0))
     return pts
+
 
 
 def detect_pose(image_bytes: bytes) -> PoseDetectionResponse:

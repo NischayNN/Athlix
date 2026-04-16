@@ -26,6 +26,14 @@ router = APIRouter(prefix="", tags=["Frame Processing"])
 
 _ALLOWED_TYPES = {"image/jpeg", "image/png", "image/webp"}
 
+_ISSUE_DETAILS = {
+    "Incomplete Depth":       "Hip crease did not drop below the patella.",
+    "Knee Valgus":            "Medial collapse detected during the concentric phase.",
+    "Excessive Forward Lean": "Torso angle exceeded safe thresholds relative to vertical.",
+    "Heel Rise":              "Heel lifted off the platform during the descent.",
+    "Lateral Shift":          "Lateral weight distribution asymmetry detected.",
+}
+
 
 @router.post(
     "/process-frame",
@@ -269,20 +277,90 @@ async def analyze_video(file: UploadFile = File(...)):
             computed_score, risk_output.risk_score, reps, frames_processed,
         )
 
-        return {
-            "score":          computed_score,
-            "injury_risk":    risk_output.risk_score,
-            "risk_level":     risk_output.risk_level,
-            "reps":           reps,
-            "feature_vector": feature_vector,
-            "form_flags": {
-                "knee_valgus":            form_flags.knee_valgus        or False,
-                "incomplete_depth":        form_flags.insufficient_depth or False,
-                "excessive_forward_lean": form_flags.bad_back_posture   or False,
-                "heel_rise":              False,
-                "lateral_shift":          False,
-            },
+        # ── Build Movement Risk Index (the UI's main risk display) ────────
+        # Combine form flags into a per-issue risk breakdown
+        form_flag_dict = {
+            "knee_valgus":            form_flags.knee_valgus        or False,
+            "incomplete_depth":       form_flags.insufficient_depth or False,
+            "excessive_forward_lean": form_flags.bad_back_posture   or False,
+            "heel_rise":              False,
+            "lateral_shift":          False,
         }
+
+        # Risk contribution breakdown (matches what Results.jsx renders)
+        risk_breakdown = []
+        flag_severity_map = {
+            "incomplete_depth":       ("Incomplete Depth",       0.8,  "High"),
+            "knee_valgus":            ("Knee Valgus",            0.5,  "Medium"),
+            "excessive_forward_lean": ("Excessive Forward Lean", 0.5,  "Medium"),
+            "heel_rise":              ("Heel Rise",              0.2,  "Low"),
+            "lateral_shift":          ("Lateral Shift",          0.2,  "Low"),
+        }
+
+        total_risk_contribution = 0.0
+        intensity_mult = round(min((training_load / 10.0) ** 2, 1.0), 2)
+        recovery_mult  = round(max(1.0, 1.0 + (100.0 - recovery_score) / 200.0), 2)
+
+        for flag_key, (issue_name, base_sev, sev_label) in flag_severity_map.items():
+            if form_flag_dict.get(flag_key):
+                contribution = round(base_sev * intensity_mult * recovery_mult, 2)
+                total_risk_contribution += contribution
+                risk_breakdown.append({
+                    "issue":         issue_name,
+                    "flawSeverity":  f"{base_sev:.2f}",
+                    "intensityMult": f"{intensity_mult:.2f}",
+                    "recoveryMult":  f"{recovery_mult:.2f}",
+                    "historyMult":   "1.00",
+                    "contribution":  f"{contribution:.2f}",
+                })
+
+        movement_risk_index = round(min(total_risk_contribution * 35 + risk_output.risk_score * 0.5, 100), 0)
+        risk_label = "High" if movement_risk_index >= 75 else ("Moderate" if movement_risk_index >= 40 else "Low")
+
+        # Explanation insight based on risk level
+        if movement_risk_index >= 75:
+            if recovery_mult > 1.2:
+                explanation_insight = "Elevated risk due to poor recovery state amplifying form fatigue."
+            else:
+                explanation_insight = "Form breakdown under high relative load. Tendon and joint structures are significantly stressed."
+        elif movement_risk_index >= 40:
+            explanation_insight = "Moderate mechanical shifts detected. Monitor load scaling carefully."
+        else:
+            explanation_insight = "Solid movement pattern under acceptable relative load."
+
+        # Velocity estimation from knee angle range of motion
+        knee_range = (max(knee_angles) - min(knee_angles)) if len(knee_angles) > 1 else 20.0
+        movement_velocity = round(knee_range / 100.0 * (duration_s + 0.5), 2)
+        velocity_classification = "Strength" if movement_velocity < 0.5 else ("Power" if movement_velocity > 0.8 else "Hypertrophy")
+
+        # Load score: function of training load, reps, and velocity
+        load_score = round(training_load * max(reps, 1) * (1.0 if velocity_classification == "Hypertrophy" else 0.8 if velocity_classification == "Strength" else 1.2), 1)
+
+        return {
+            "score":                   computed_score,
+            "injury_risk":             risk_output.risk_score,
+            "risk_level":              risk_output.risk_level,
+            "reps":                    reps,
+            "feature_vector":          feature_vector,
+            "form_flags":              form_flag_dict,
+            # Movement Risk Index section (Results.jsx)
+            "movementRiskIndex":       int(movement_risk_index),
+            "riskLabel":               risk_label,
+            "riskBreakdown":           risk_breakdown,
+            "explanationInsight":      explanation_insight,
+            # Intensity Profile section (Results.jsx)
+            "movementVelocity":        f"{movement_velocity:.2f}",
+            "velocityClassification":  velocity_classification,
+            "loadScore":               f"{load_score:.1f}",
+            # Key issues for Highlights section
+            "keyIssues": [
+                {"id": i + 1, "issue": rb["issue"], "severity": sev_label, "detail": _ISSUE_DETAILS.get(rb["issue"], "")}
+                for i, rb in enumerate(risk_breakdown)
+            ] if risk_breakdown else [
+                {"id": 1, "issue": "Good Form", "severity": "Low", "detail": "No significant mechanical deviations detected."}
+            ],
+        }
+
 
     except Exception as exc:
         logger.error("analyze_video processing failed: %s", str(exc), exc_info=True)
