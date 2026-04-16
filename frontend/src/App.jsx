@@ -1,12 +1,18 @@
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Home from "./pages/Home";
+import Dashboard from "./pages/Dashboard";
+import Upload from "./pages/Upload";
+
 function App() {
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
-      <div className="bg-slate-900 p-8 rounded-2xl shadow-xl border border-slate-800">
-        <h1 className="text-4xl font-bold text-cyan-400">Athlix</h1>
-        <p className="mt-3 text-slate-300">Tailwind is working.</p>
-      </div>
-    </div>
-  )
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/upload" element={<Upload />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;
