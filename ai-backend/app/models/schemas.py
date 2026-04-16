@@ -143,6 +143,15 @@ class FeatureVector(BaseModel):
     form_decay_rate: Optional[float] = None
 
 
+class ProcessFrameResponse(BaseModel):
+    pose_detected:   bool
+    feature_vector:  Optional[FeatureVector] = None
+    form_flags:      Optional[FormFlags]     = None
+    angles:          Optional[AngleResult]   = None
+    processing_time_ms: float
+    error: Optional[str] = None
+
+
 class HealthResponse(BaseModel):
     status:          str  = "ok"
     version:         str
