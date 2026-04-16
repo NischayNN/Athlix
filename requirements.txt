@@ -18,6 +18,7 @@ numpy==1.26.4
 scikit-learn==1.4.2            # Pre/post-processing helpers
 xgboost==2.0.3                 # Gradient-boosted tree model (future integration)
 joblib==1.4.0                  # Model serialisation / deserialisation
+shap==0.45.1                   # Model explainability (SHAP values for tree models)
 
 # ── Data Handling ────────────────────────────────────────────────────────────
 pandas==2.2.2                  # Data manipulation for training pipeline
