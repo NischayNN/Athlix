@@ -10,7 +10,11 @@ uvicorn[standard]==0.29.0     # ASGI server with WebSocket support
 python-multipart==0.0.9       # Required for UploadFile / multipart form data
 
 # ── Pose Detection ───────────────────────────────────────────────────────────
+<<<<<<< HEAD
 mediapipe>=0.10.30             # BlazePose (33-keypoint full-body model)
+=======
+mediapipe>=0.10.14             # BlazePose (33-keypoint full-body model)
+>>>>>>> a5eab63228f7298a9d13b7950589b3dcce337927
 opencv-python-headless>=4.9.0.80  # OpenCV without GUI libs (server-safe)
 
 # ── Numeric / ML Utilities ───────────────────────────────────────────────────
