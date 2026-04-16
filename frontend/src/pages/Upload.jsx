@@ -7,7 +7,7 @@ function Upload() {
   const navigate = useNavigate();
   const [selectedFile, setSelectedFile] = useState(null);
   const [movementType, setMovementType] = useState('squat');
-  
+
   // Athlete Profile 
   const [profile, setProfile] = useState(null);
 
@@ -73,7 +73,7 @@ function Upload() {
   const maxPR = parseFloat(profile?.maxPR) || 140; // Fallback MVP PR
   const weight = parseFloat(weightUsed) || 100;
   const repCount = parseFloat(reps) || 5;
-  
+
   // Epley 1RM Formula estimation
   const estimated1RM = weight * (1 + 0.0333 * repCount);
   let derivedIntensity = (estimated1RM / maxPR) * 10;
@@ -204,7 +204,7 @@ function Upload() {
 
             {/* Telemetry data */}
             <div className="grid lg:grid-cols-2 gap-12 border-t border-zinc-900 pt-12">
-              
+
               {/* Recovery Context */}
               <div>
                 <h2 className="text-[10px] uppercase tracking-[0.2em] font-bold text-zinc-600 mb-8 flex items-center">
@@ -213,25 +213,25 @@ function Upload() {
                 <div className="space-y-6">
                   <div className="flex justify-between items-end border-b border-zinc-900 pb-2">
                     <label className="text-zinc-400 text-xs tracking-widest uppercase font-bold">Sleep (Hrs)</label>
-                    <input type="number" min="0" max="24" step="0.5" value={sleepHours} onChange={e=>setSleepHours(e.target.value)} className="bg-transparent text-right font-mono text-sm text-white w-16 outline-none"/>
+                    <input type="number" min="0" max="24" step="0.5" value={sleepHours} onChange={e => setSleepHours(e.target.value)} className="bg-transparent text-right font-mono text-sm text-white w-16 outline-none" />
                   </div>
                   <div className="flex justify-between items-end border-b border-zinc-900 pb-2">
                     <label className="text-zinc-400 text-xs tracking-widest uppercase font-bold">Base Soreness (1-10)</label>
-                    <input type="number" min="1" max="10" value={soreness} onChange={e=>setSoreness(e.target.value)} className="bg-transparent text-right font-mono text-sm text-white w-16 outline-none"/>
+                    <input type="number" min="1" max="10" value={soreness} onChange={e => setSoreness(e.target.value)} className="bg-transparent text-right font-mono text-sm text-white w-16 outline-none" />
                   </div>
                   <div className="flex justify-between items-end border-b border-zinc-900 pb-2">
                     <label className="text-zinc-400 text-xs tracking-widest uppercase font-bold">Stress Level (1-10)</label>
-                    <input type="number" min="1" max="10" value={stress} onChange={e=>setStress(e.target.value)} className="bg-transparent text-right font-mono text-sm text-white w-16 outline-none"/>
+                    <input type="number" min="1" max="10" value={stress} onChange={e => setStress(e.target.value)} className="bg-transparent text-right font-mono text-sm text-white w-16 outline-none" />
                   </div>
                   <div className="flex justify-between items-end border-b border-zinc-900 pb-2">
                     <label className="text-zinc-400 text-xs tracking-widest uppercase font-bold">Protein Intake</label>
-                    <select value={proteinIntake} onChange={e=>setProteinIntake(e.target.value)} className="bg-black text-right font-mono text-sm text-white outline-none appearance-none">
+                    <select value={proteinIntake} onChange={e => setProteinIntake(e.target.value)} className="bg-black text-right font-mono text-sm text-white outline-none appearance-none">
                       <option>Suboptimal</option><option>Adequate</option><option>Optimal</option>
                     </select>
                   </div>
                   <div className="flex justify-between items-end border-b border-zinc-900 pb-2">
                     <label className="text-zinc-400 text-xs tracking-widest uppercase font-bold">Hydration</label>
-                    <select value={hydration} onChange={e=>setHydration(e.target.value)} className="bg-black text-right font-mono text-sm text-white outline-none appearance-none">
+                    <select value={hydration} onChange={e => setHydration(e.target.value)} className="bg-black text-right font-mono text-sm text-white outline-none appearance-none">
                       <option>Suboptimal</option><option>Adequate</option><option>Optimal</option>
                     </select>
                   </div>
@@ -246,19 +246,19 @@ function Upload() {
                 <div className="space-y-6">
                   <div className="flex justify-between items-end border-b border-zinc-900 pb-2">
                     <label className="text-zinc-400 text-xs tracking-widest uppercase font-bold">Duration (Min)</label>
-                    <input type="number" min="0" max="300" step="5" value={workoutDuration} onChange={e=>setWorkoutDuration(e.target.value)} className="bg-transparent text-right font-mono text-sm text-white w-16 outline-none"/>
+                    <input type="number" min="0" max="300" step="5" value={workoutDuration} onChange={e => setWorkoutDuration(e.target.value)} className="bg-transparent text-right font-mono text-sm text-white w-16 outline-none" />
                   </div>
                   <div className="flex justify-between items-end border-b border-zinc-900 pb-2">
                     <label className="text-zinc-400 text-xs tracking-widest uppercase font-bold">Working Sets</label>
-                    <input type="number" min="1" max="20" value={sets} onChange={e=>setSets(e.target.value)} className="bg-transparent text-right font-mono text-sm text-white w-16 outline-none"/>
+                    <input type="number" min="1" max="20" value={sets} onChange={e => setSets(e.target.value)} className="bg-transparent text-right font-mono text-sm text-white w-16 outline-none" />
                   </div>
                   <div className="flex justify-between items-end border-b border-zinc-900 pb-2">
                     <label className="text-zinc-400 text-xs tracking-widest uppercase font-bold">Reps Per Set</label>
-                    <input type="number" min="1" max="50" value={reps} onChange={e=>setReps(e.target.value)} className="bg-transparent text-right font-mono text-sm text-white w-16 outline-none"/>
+                    <input type="number" min="1" max="50" value={reps} onChange={e => setReps(e.target.value)} className="bg-transparent text-right font-mono text-sm text-white w-16 outline-none" />
                   </div>
                   <div className="flex justify-between items-end border-b border-zinc-900 pb-2">
                     <label className="text-zinc-400 text-xs tracking-widest uppercase font-bold">Weight Used (kg)</label>
-                    <input type="number" min="0" max="500" step="2.5" value={weightUsed} onChange={e=>setWeightUsed(e.target.value)} className="bg-transparent text-right font-mono text-sm text-white w-20 outline-none"/>
+                    <input type="number" min="0" max="500" step="2.5" value={weightUsed} onChange={e => setWeightUsed(e.target.value)} className="bg-transparent text-right font-mono text-sm text-white w-20 outline-none" />
                   </div>
                   <div className="flex justify-between items-center bg-[#111] border border-zinc-800 p-3 mt-4">
                     <label className="text-[#32ade6] text-[10px] tracking-widest uppercase font-bold flex items-center">
@@ -269,7 +269,7 @@ function Upload() {
                   </div>
                   <div className="flex justify-between items-end border-b border-zinc-900 pb-2">
                     <label className="text-zinc-400 text-xs tracking-widest uppercase font-bold">Freq (Days/Wk)</label>
-                    <input type="number" min="1" max="7" value={frequency} onChange={e=>setFrequency(e.target.value)} className="bg-transparent text-right font-mono text-sm text-white w-16 outline-none"/>
+                    <input type="number" min="1" max="7" value={frequency} onChange={e => setFrequency(e.target.value)} className="bg-transparent text-right font-mono text-sm text-white w-16 outline-none" />
                   </div>
                 </div>
               </div>
@@ -335,12 +335,12 @@ function Upload() {
                 Separating physiological constraints from temporal session stress variables. This multi-layered context enables probabilistic failure curves.
               </p>
               <div className="space-y-6">
-                 <div className="bg-[#050505] border border-zinc-900 p-6">
-                    <h4 className="text-xs font-bold text-zinc-300 uppercase tracking-widest mb-2">Context Overlay</h4>
-                    <p className="text-zinc-500 text-xs leading-relaxed">
-                      Athlix parses both baseline structure (Height, Weight, Age) against acute fatigue triggers (Session Load, RPE, Quality of Sleep).
-                    </p>
-                 </div>
+                <div className="bg-[#050505] border border-zinc-900 p-6">
+                  <h4 className="text-xs font-bold text-zinc-300 uppercase tracking-widest mb-2">Context Overlay</h4>
+                  <p className="text-zinc-500 text-xs leading-relaxed">
+                    Athlix parses both baseline structure (Height, Weight, Age) against acute fatigue triggers (Session Load, RPE, Quality of Sleep).
+                  </p>
+                </div>
               </div>
             </div>
           </div>

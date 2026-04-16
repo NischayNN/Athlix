@@ -8,7 +8,7 @@ function Dashboard() {
       {/* Sidebar Navigation */}
       <aside className="w-full md:w-72 border-b md:border-b-0 md:border-r border-zinc-900 p-8 flex flex-col justify-between">
         <div>
-          <div 
+          <div
             className="flex items-center gap-3 mb-16 cursor-pointer"
             onClick={() => navigate('/')}
           >
@@ -28,7 +28,7 @@ function Dashboard() {
                 <li className="text-zinc-600 hover:text-zinc-400 cursor-not-allowed transition flex items-center gap-3">
                   <span className="w-1.5 h-1.5 rounded-full bg-transparent"></span> History
                 </li>
-                <li 
+                <li
                   onClick={() => navigate('/profile')}
                   className="text-white hover:text-zinc-300 cursor-pointer transition flex items-center gap-3"
                 >
@@ -51,7 +51,7 @@ function Dashboard() {
             <h1 className="text-5xl font-black tracking-tighter uppercase mb-4">Dashboard</h1>
             <p className="text-lg text-zinc-500 font-light tracking-wide">Select a movement protocol to begin precision tracking.</p>
           </div>
-          <button 
+          <button
             onClick={() => navigate('/upload')}
             className="px-10 py-5 bg-white text-black font-bold uppercase tracking-[0.2em] text-xs hover:bg-zinc-200 transition shadow-2xl"
           >
@@ -66,11 +66,11 @@ function Dashboard() {
               <div className="flex items-center justify-between mb-8">
                 <h2 className="text-xs font-bold tracking-[0.2em] text-white uppercase">Movement Architecture</h2>
               </div>
-              
+
               <div className="grid sm:grid-cols-2 gap-6">
                 {/* Protocol: Squat */}
-                <div 
-                  className="group relative bg-[#111] border border-zinc-800 p-8 hover:border-zinc-500 transition-colors cursor-pointer flex flex-col justify-between min-h-[320px]" 
+                <div
+                  className="group relative bg-[#111] border border-zinc-800 p-8 hover:border-zinc-500 transition-colors cursor-pointer flex flex-col justify-between min-h-[320px]"
                   onClick={() => navigate('/upload')}
                 >
                   <div className="flex justify-between items-start mb-6">
@@ -80,9 +80,9 @@ function Dashboard() {
                       Active
                     </span>
                   </div>
-                  
+
                   <div>
-                    <h3 className="text-3xl font-black text-white uppercase tracking-tighter mb-4 group-hover:text-zinc-300 transition line-clamp-2">Gym:<br/>Squat</h3>
+                    <h3 className="text-3xl font-black text-white uppercase tracking-tighter mb-4 group-hover:text-zinc-300 transition line-clamp-2">Gym:<br />Squat</h3>
                     <p className="text-zinc-500 text-sm font-light leading-relaxed mb-8">
                       Full-body biomechanical tracking. Detecting depth, forward lean, and varus collapse under load.
                     </p>
@@ -101,9 +101,9 @@ function Dashboard() {
                       Locked
                     </span>
                   </div>
-                  
+
                   <div className="relative z-10">
-                    <h3 className="text-3xl font-black text-zinc-700 uppercase tracking-tighter mb-4 line-clamp-2">Sports:<br/>Fast Bowler</h3>
+                    <h3 className="text-3xl font-black text-zinc-700 uppercase tracking-tighter mb-4 line-clamp-2">Sports:<br />Fast Bowler</h3>
                     <p className="text-zinc-700 text-sm font-light leading-relaxed mb-8">
                       Pace and spin kinematics. Run-up momentum, release angle, and front-foot contact forces.
                     </p>
@@ -116,19 +116,19 @@ function Dashboard() {
             </div>
 
             {/* Quick Upload Banner */}
-            <div 
+            <div
               onClick={() => navigate('/upload')}
               className="bg-black border border-zinc-800 p-8 flex flex-col sm:flex-row items-center justify-between cursor-pointer hover:border-zinc-500 transition"
             >
-               <div>
-                  <h3 className="text-white font-bold uppercase tracking-[0.15em] text-sm mb-2">Direct Upload</h3>
-                  <p className="text-zinc-500 text-xs font-light tracking-wide">Bypass protocol selection. Parse generic movement data instantly.</p>
-               </div>
-               <div className="mt-6 sm:mt-0 px-8 py-4 bg-[#111] border border-zinc-700 text-white font-bold uppercase text-[10px] tracking-widest hover:bg-white hover:text-black transition">
-                 Select File
-               </div>
+              <div>
+                <h3 className="text-white font-bold uppercase tracking-[0.15em] text-sm mb-2">Direct Upload</h3>
+                <p className="text-zinc-500 text-xs font-light tracking-wide">Bypass protocol selection. Parse generic movement data instantly.</p>
+              </div>
+              <div className="mt-6 sm:mt-0 px-8 py-4 bg-[#111] border border-zinc-700 text-white font-bold uppercase text-[10px] tracking-widest hover:bg-white hover:text-black transition">
+                Select File
+              </div>
             </div>
-            
+
           </div>
 
           {/* Side Capabilities Panel */}
@@ -137,9 +137,9 @@ function Dashboard() {
               <h2 className="text-xs font-bold tracking-[0.2em] text-white uppercase mb-8 border-b border-zinc-900 pb-4">
                 Engine Status
               </h2>
-              
+
               <div className="space-y-10">
-                
+
                 <div className="flex items-start gap-5">
                   <div className="mt-1 font-mono text-zinc-700 text-sm">01</div>
                   <div>

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 function Profile() {
   const navigate = useNavigate();
-  
+
   const [profile, setProfile] = useState({
     age: '',
     weight: '',
@@ -43,7 +43,7 @@ function Profile() {
             <h1 className="text-5xl font-black tracking-tighter uppercase mb-2">Athlete Profile</h1>
             <p className="text-zinc-500 font-light tracking-wide text-lg">Stable baseline biometrics for precision analysis.</p>
           </div>
-          <button 
+          <button
             onClick={() => navigate('/upload')}
             className="text-[10px] uppercase font-bold tracking-widest text-zinc-500 hover:text-white transition"
           >
@@ -97,7 +97,7 @@ function Profile() {
             <div className="grid sm:grid-cols-2 gap-6">
               <div>
                 <label className="block text-zinc-500 text-[10px] tracking-widest uppercase mb-4 font-bold">Training Experience</label>
-                <select 
+                <select
                   name="experience" value={profile.experience} onChange={handleChange}
                   className="w-full bg-[#050505] border border-zinc-900 focus:border-white transition-colors p-4 text-white font-mono text-sm outline-none appearance-none"
                 >
@@ -127,19 +127,19 @@ function Profile() {
           {/* Action Row */}
           <div className="pt-8 border-t border-zinc-900 flex justify-between items-center">
             {saved ? (
-               <span className="text-green-500 font-bold uppercase text-[10px] tracking-widest flex items-center">
-                 <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                 Profile Synced
-               </span>
+              <span className="text-green-500 font-bold uppercase text-[10px] tracking-widest flex items-center">
+                <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                Profile Synced
+              </span>
             ) : (
-               <span className="text-zinc-600 font-mono text-xs">Unsaved changes will be discarded</span>
+              <span className="text-zinc-600 font-mono text-xs">Unsaved changes will be discarded</span>
             )}
-            
-            <button 
+
+            <button
               onClick={handleSave}
               className="px-10 py-5 bg-white text-black font-bold uppercase text-[10px] tracking-widest hover:bg-zinc-200 transition shadow-[0_0_30px_rgba(255,255,255,0.1)]"
             >
-               Save Profile Context
+              Save Profile Context
             </button>
           </div>
         </section>

@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import { api } from "../services/api";
+import FormCorrectionPreview from "../components/FormCorrectionPreview";
 
 // ─── Utility: Animated number counter ────────────────────────────
 function useCounter(target, duration = 1200) {
@@ -185,16 +186,69 @@ function Results() {
 
             <div className="mt-12 w-full grid grid-cols-2 gap-4 text-center">
               <div className="bg-black/40 rounded-2xl p-4">
-                <div className="text-zinc-400 text-xs font-semibold uppercase tracking-wider mb-1">Injury Risk</div>
-                <div className={`text-xl font-bold ${mockData.injuryRisk === 'ELEVATED' || mockData.injuryRisk === 'HIGH' ? 'text-[#ff3b30]' : 'text-[#34c759]'}`}>
-                  {mockData.injuryRisk}
-                </div>
-              </div>
-              <div className="bg-black/40 rounded-2xl p-4">
                 <div className="text-zinc-400 text-xs font-semibold uppercase tracking-wider mb-1">Reps Logged</div>
                 <div className="text-xl font-bold text-[#ff9f0a]">{mockData.decayData.length} Total</div>
               </div>
+              <div className="bg-black/40 rounded-2xl p-4">
+                <div className="text-zinc-400 text-xs font-semibold uppercase tracking-wider mb-1">Velocity Profile</div>
+                <div className="text-xl font-bold text-[#32ade6]">{mockData.velocityClassification || 'Moderate'}</div>
+              </div>
             </div>
+          </div>
+        </FadeSection>
+
+        {/* ─── Movement Risk Index Card (NEW) ──────────────────── */}
+        <FadeSection delay={50}>
+          <div className="bg-gradient-to-br from-[#1c1c1e] to-[#0a0a0c] rounded-[32px] p-8 md:p-10 border border-white/10 relative overflow-hidden shadow-2xl">
+            <div className="absolute top-0 right-0 p-8 opacity-20 pointer-events-none text-9xl font-black text-white">
+              {mockData.movementRiskIndex}
+            </div>
+            
+            <h3 className="text-2xl font-bold tracking-tight mb-2 relative z-10">Movement Risk Index</h3>
+            <p className="text-zinc-400 text-sm font-medium leading-relaxed mb-8 max-w-sm relative z-10">
+              Context-aware synthesis of mechanical deviations, session intensity, recovery state, and injury history.
+            </p>
+
+            <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
+              <div className="flex flex-col items-center justify-center bg-black/60 rounded-[32px] w-48 h-48 border border-white/5 shadow-inner">
+                <span className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1 mb-2 rounded-full ${
+                  mockData.riskLabel === 'High' ? 'text-[#ff3b30] bg-[#ff3b30]/10' :
+                  mockData.riskLabel === 'Moderate' ? 'text-[#ff9f0a] bg-[#ff9f0a]/10' :
+                  'text-[#34c759] bg-[#34c759]/10'
+                }`}>
+                  {mockData.riskLabel} RISK
+                </span>
+                <span className="text-7xl font-black text-white tracking-tighter">{mockData.movementRiskIndex}</span>
+                <span className="text-xs text-zinc-500 uppercase font-bold tracking-widest mt-1">/ 100</span>
+              </div>
+              
+              <div className="flex-1 bg-black/40 rounded-[24px] p-6 border border-white/5 w-full">
+                <p className="text-sm text-zinc-300 font-medium leading-relaxed">
+                  <span className="text-white font-bold block mb-2 break-words">Insight:</span>
+                  {mockData.explanationInsight}
+                </p>
+              </div>
+            </div>
+
+            {/* Explainability Breakdown */}
+            <div className="mt-8 pt-6 border-t border-white/5 relative z-10">
+              <h4 className="text-xs uppercase font-bold text-zinc-500 tracking-widest mb-4">Risk Contribution Breakdown</h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {mockData.riskBreakdown?.slice(0, 4).map((rb, idx) => (
+                  <div key={idx} className="bg-black/30 rounded-xl p-4">
+                    <div className="text-[10px] text-zinc-400 font-bold uppercase truncate mb-1" title={rb.issue}>{rb.issue}</div>
+                    <div className="text-lg font-bold text-white mb-2">+{rb.contribution}</div>
+                    <div className="flex flex-col gap-1 text-[9px] text-zinc-600 font-mono">
+                      <span>Sev: {rb.flawSeverity}</span>
+                      <span>Int: x{rb.intensityMult}</span>
+                      <span>Rec: x{rb.recoveryMult}</span>
+                      <span>His: x{rb.historyMult}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
           </div>
         </FadeSection>
 
@@ -260,41 +314,49 @@ function Results() {
 
         {/* ─── Personalized Intensity Load (Derived) ───────────── */}
         <FadeSection delay={150}>
-          <div className="bg-[#1c1c1e] rounded-[32px] p-8 md:p-10 flex flex-col md:flex-row gap-8 items-center border border-white/5 relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-2 h-full bg-gradient-to-b from-[#ffea00] to-[#ff3b30]" />
+          <div className="bg-[#1c1c1e] rounded-[32px] p-8 flex flex-col gap-6 relative overflow-hidden border border-white/5">
+            <div className="absolute top-0 left-0 w-2 h-full bg-gradient-to-b from-[#32ade6] to-[#af52ff]" />
             
-            <div className="flex-1 shrink-0 text-center md:text-left">
-              <h3 className="text-xl font-bold tracking-tight mb-2">Kinematic Load Context</h3>
-              <p className="text-zinc-400 text-sm font-medium leading-relaxed mb-6">
-                {mockData.loadInterpretation || "Form evaluated under baseline relative loading."}
-              </p>
-              
-              <div className="flex gap-4 max-w-sm mx-auto md:mx-0">
-                <div className="flex-1 bg-black/40 rounded-xl p-4 border border-white/5">
-                  <div className="text-[10px] text-zinc-500 uppercase font-bold tracking-widest mb-1">Session Weight</div>
-                  <div className="text-xl font-bold text-white">{mockData.weightUsed || 100}kg</div>
-                </div>
-                <div className="flex-1 bg-black/40 rounded-xl p-4 border border-white/5">
-                  <div className="text-[10px] text-zinc-500 uppercase font-bold tracking-widest mb-1">Athlete Max PR</div>
-                  <div className="text-xl font-bold text-white">{mockData.maxPR || 140}kg</div>
-                </div>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div>
+                <h3 className="text-xl font-bold tracking-tight mb-1">Intensity Profile</h3>
+                <p className="text-zinc-400 text-sm font-medium">Kinematic load multiplied by estimated velocity.</p>
+              </div>
+              <div className="px-4 py-2 bg-black/40 rounded-full border border-white/5 text-xs font-bold text-zinc-300">
+                <span className="opacity-50 mr-2">Est. Velocity</span> {mockData.movementVelocity} m/s
               </div>
             </div>
 
-            <div className="flex flex-col items-center bg-black/40 rounded-[24px] p-6 min-w-[200px] border border-white/5 shadow-2xl">
-              <div className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-2">Relative Load</div>
-              <div className="text-4xl font-black text-white flex items-baseline gap-1">
-                {mockData.relativePct || "71"} <span className="text-lg text-zinc-500 uppercase">%</span>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="bg-black/40 rounded-2xl p-5 border border-white/5">
+                <div className="text-[10px] text-zinc-500 uppercase font-bold tracking-widest mb-1">Relative Load</div>
+                <div className="text-3xl font-black text-white flex items-baseline gap-1">
+                  {mockData.relativePct} <span className="text-sm text-zinc-500 uppercase">%</span>
+                </div>
+                <div className="text-xs text-zinc-400 mt-1 font-medium">{mockData.weightUsed}kg of {mockData.maxPR}kg Max</div>
               </div>
-              <div className={`mt-3 text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full ${
-                mockData.intensityBand === 'MAXIMAL' ? 'text-[#ff3b30] bg-[#ff3b30]/10' :
-                mockData.intensityBand === 'HIGH' ? 'text-[#ff9f0a] bg-[#ff9f0a]/10' :
-                mockData.intensityBand === 'LOW' ? 'text-[#32ade6] bg-[#32ade6]/10' :
-                'text-[#34c759] bg-[#34c759]/10'
-              }`}>
-                {mockData.intensityBand || "MODERATE"} LOAD
+
+              <div className="bg-black/40 rounded-2xl p-5 border border-white/5">
+                <div className="text-[10px] text-zinc-500 uppercase font-bold tracking-widest mb-1">Movement Class</div>
+                <div className={`text-2xl font-bold ${
+                  mockData.velocityClassification === 'Strength' ? 'text-[#ff3b30]' :
+                  mockData.velocityClassification === 'Power' ? 'text-[#ffea00]' : 'text-[#32ade6]'
+                }`}>
+                  {mockData.velocityClassification}
+                </div>
+                <div className="text-xs text-zinc-400 mt-1 font-medium">Adaptation Focus</div>
+              </div>
+
+              <div className="bg-black/40 rounded-2xl p-5 border border-white/5 relative overflow-hidden">
+                <div className="absolute -bottom-4 right-0 opacity-10">
+                  <svg className="w-24 h-24" fill="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                </div>
+                <div className="text-[10px] text-zinc-500 uppercase font-bold tracking-widest mb-1">Load Score</div>
+                <div className="text-4xl font-black text-white">{mockData.loadScore}</div>
+                <div className="text-xs text-zinc-400 mt-1 font-medium">Cumulative Stress</div>
               </div>
             </div>
+            
           </div>
         </FadeSection>
 
@@ -320,8 +382,8 @@ function Results() {
                       <div className="flex items-center justify-between mb-1">
                         <h4 className="font-bold text-lg">{issue.issue}</h4>
                         <span className={`text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${isHigh ? 'text-[#ff3b30] bg-[#ff3b30]/10' :
-                            isMed ? 'text-[#ff9f0a] bg-[#ff9f0a]/10' :
-                              'text-[#32ade6] bg-[#32ade6]/10'
+                          isMed ? 'text-[#ff9f0a] bg-[#ff9f0a]/10' :
+                            'text-[#32ade6] bg-[#32ade6]/10'
                           }`}>
                           {issue.severity}
                         </span>
@@ -385,6 +447,17 @@ function Results() {
               </div>
             </div>
           </div>
+        </FadeSection>
+
+        {/* ─── Form Correction Preview ─────────────────────────── */}
+        <FadeSection delay={350}>
+          <FormCorrectionPreview
+            formFlags={{
+              knee_valgus: mockData.keyIssues?.some(i => i.issue === 'Knee Valgus'),
+              incomplete_depth: mockData.keyIssues?.some(i => i.issue === 'Incomplete Depth'),
+              excessive_forward_lean: mockData.keyIssues?.some(i => i.issue === 'Excessive Forward Lean'),
+            }}
+          />
         </FadeSection>
 
         {/* ─── Coaching Recommendations (App Store Style Cards) ──── */}
