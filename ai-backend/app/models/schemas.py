@@ -103,6 +103,87 @@ class AngleResult(BaseModel):
     )
 
 
+class FormFlags(BaseModel):
+    """
+    Boolean form-quality flags derived from biomechanical rule analysis.
+
+    Each flag is ``True`` when the corresponding fault is **detected**.
+    A flag is ``None`` when the required landmarks were not visible enough
+    to make a determination.
+
+    Example::
+
+        {
+          "knee_valgus":          true,
+          "bad_back_posture":     false,
+          "insufficient_depth":   false
+        }
+    """
+
+    knee_valgus: Optional[bool] = Field(
+        None,
+        description=(
+            "True when one or both knees collapse inward (valgus) relative to "
+            "the corresponding ankle's horizontal position."
+        ),
+    )
+    bad_back_posture: Optional[bool] = Field(
+        None,
+        description=(
+            "True when the trunk inclination angle exceeds the configured "
+            "forward-lean threshold, indicating excessive forward bending."
+        ),
+    )
+    insufficient_depth: Optional[bool] = Field(
+        None,
+        description=(
+            "True when hip y-coordinate does not reach knee y-coordinate level, "
+            "indicating the squat depth is shallower than required. "
+            "(In normalised image coordinates y increases downward.)"
+        ),
+    )
+
+
+class FormThresholds(BaseModel):
+    """
+    Configurable thresholds for form-analysis rules.
+
+    All thresholds have sensible defaults but can be overridden per-request
+    to support different exercises or athlete profiles.
+    """
+
+    knee_valgus_tolerance: float = Field(
+        0.05,
+        ge=0.0,
+        le=1.0,
+        description=(
+            "Maximum allowed inward x-offset of the knee relative to the ankle "
+            "(normalised image width). Knee is flagged as valgus when its x "
+            "differs from the ankle's x by more than this amount in the inward "
+            "direction.  Default: 0.05 (~5% of frame width)."
+        ),
+    )
+    bad_back_angle_threshold: float = Field(
+        35.0,
+        ge=0.0,
+        le=90.0,
+        description=(
+            "Back inclination angle (degrees) above which the posture is flagged "
+            "as excessive forward lean.  Default: 35°."
+        ),
+    )
+    squat_depth_margin: float = Field(
+        0.02,
+        ge=0.0,
+        le=0.2,
+        description=(
+            "How much lower (in normalised y) the hip must be than the knee to "
+            "count as sufficient depth.  In image coords, y increases downward so "
+            "hip.y > knee.y means the hip is lower.  Default: 0.02."
+        ),
+    )
+
+
 class PoseDetectionResponse(BaseModel):
     """
     Response shape for ``POST /detect-pose``.
@@ -129,9 +210,13 @@ class PoseDetectionResponse(BaseModel):
     landmark_count: int               = Field(..., description="Number of landmarks returned (0 if no pose detected).")
     processing_time_ms: float         = Field(..., description="Server-side inference time in milliseconds.")
     landmarks: List[PoseLandmarkItem] = Field(default_factory=list)
-    angles: Optional[AngleResult]     = Field(
+    angles: Optional[AngleResult]  = Field(
         None,
         description="Computed joint angles. Null when no pose is detected.",
+    )
+    form_flags: Optional[FormFlags] = Field(
+        None,
+        description="Form-quality flags from rule-based analysis. Null when no pose is detected.",
     )
 
 

@@ -33,7 +33,8 @@ import cv2
 import mediapipe as mp
 import numpy as np
 
-from app.models.schemas import AngleResult, Landmark, PoseLandmarkItem, PoseDetectionResponse
+from app.models.schemas import AngleResult, FormFlags, Landmark, PoseLandmarkItem, PoseDetectionResponse
+from app.services.feature_engineering import analyze_form
 from app.utils.angle_utils import compute_all_angles
 
 logger = logging.getLogger(__name__)
@@ -256,6 +257,10 @@ def detect_pose(image_bytes: bytes) -> PoseDetectionResponse:
         processing_time_ms=round(elapsed_ms, 2),
         landmarks=landmark_items,
         angles=angles,
+        form_flags=analyze_form(
+            landmarks=landmark_items,
+            back_angle=raw_angles["back_angle"],
+        ),
     )
 
 
